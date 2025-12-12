@@ -778,31 +778,29 @@ private:
 
   DWORD LoadModule(HANDLE hProcess, LPCSTR img, LPCSTR mod, DWORD64 baseAddr, DWORD size)
   {
-    CHAR* szImg = _strdup(img);
-    CHAR* szMod = _strdup(mod);
     DWORD result = ERROR_SUCCESS;
-    if ((szImg == NULL) || (szMod == NULL))
+    if ((img == NULL) || (mod == NULL))
       result = ERROR_NOT_ENOUGH_MEMORY;
     else
     {
-      if (pSLM(hProcess, 0, szImg, szMod, baseAddr, size) == 0)
+      if (pSLM(hProcess, 0, img, mod, baseAddr, size) == 0)
         result = GetLastError();
     }
     ULONGLONG fileVersion = 0;
-    if ((m_parent != NULL) && (szImg != NULL))
+    if ((m_parent != NULL) && (img != NULL))
     {
       // try to retrieve the file-version:
       if ((this->m_parent->m_options & StackWalker::RetrieveFileVersion) != 0)
       {
         VS_FIXEDFILEINFO* fInfo = NULL;
         DWORD             dwHandle;
-        DWORD             dwSize = GetFileVersionInfoSizeA(szImg, &dwHandle);
+        DWORD             dwSize = GetFileVersionInfoSizeA(img, &dwHandle);
         if (dwSize > 0)
         {
           LPVOID vData = malloc(dwSize);
           if (vData != NULL)
           {
-            if (GetFileVersionInfoA(szImg, dwHandle, dwSize, vData) != 0)
+            if (GetFileVersionInfoA(img, dwHandle, dwSize, vData) != 0)
             {
               UINT  len;
               TCHAR szSubBlock[] = _T("\\");
@@ -861,10 +859,6 @@ private:
       this->m_parent->OnLoadModule(img, mod, baseAddr, size, result, szSymType, pdbName,
                                    fileVersion);
     }
-    if (szImg != NULL)
-      free(szImg);
-    if (szMod != NULL)
-      free(szMod);
     return result;
   }
 
