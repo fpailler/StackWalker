@@ -273,6 +273,10 @@ public:
     pSW = NULL;
     pUDSN = NULL;
     pSGSP = NULL;
+    pSAIIT = NULL;
+    pSQIT = NULL;
+    pSFIC = NULL;
+    pSGLFIC = NULL;
     m_ctx.ContextFlags = 0;
     if (ctx != NULL)
       m_ctx = *ctx;
