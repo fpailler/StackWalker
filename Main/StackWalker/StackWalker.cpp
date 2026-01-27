@@ -282,6 +282,12 @@ public:
       m_ctx = *ctx;
   }
 
+  StackWalkerInternal() = delete;
+  StackWalkerInternal(const StackWalkerInternal&) = delete;
+  StackWalkerInternal& operator=(const StackWalkerInternal&) = delete;
+  StackWalkerInternal(StackWalkerInternal&&) = delete;
+  StackWalkerInternal& operator=(StackWalkerInternal&&) = delete;
+
   ~StackWalkerInternal()
   {
     if (pSC != NULL)
@@ -1011,6 +1017,40 @@ StackWalker::StackWalker(int options, LPCSTR szSymPath, DWORD dwProcessId, HANDL
 StackWalker::StackWalker(ExceptType extype, int options, PEXCEPTION_POINTERS exp)
 {
   Init(extype, options, NULL, GetCurrentProcessId(), GetCurrentProcess(), exp);
+}
+
+StackWalker::StackWalker(StackWalker&& other)
+{
+  m_sw               = other.m_sw;
+  m_hProcess         = other.m_hProcess;
+  m_dwProcessId      = other.m_dwProcessId;
+  m_modulesLoaded    = other.m_modulesLoaded;
+  m_szSymPath        = other.m_szSymPath;
+  m_options          = other.m_options;
+  m_MaxRecursionCount = other.m_MaxRecursionCount;
+
+  other.m_szSymPath  = NULL;
+  other.m_sw         = NULL;
+}
+
+StackWalker& StackWalker::operator=(StackWalker&& other)
+{
+  if (this != &other)
+  {
+    StackWalker::~StackWalker();
+
+    m_sw               = other.m_sw;
+    m_hProcess         = other.m_hProcess;
+    m_dwProcessId      = other.m_dwProcessId;
+    m_modulesLoaded    = other.m_modulesLoaded;
+    m_szSymPath        = other.m_szSymPath;
+    m_options          = other.m_options;
+    m_MaxRecursionCount = other.m_MaxRecursionCount;
+
+    other.m_szSymPath  = NULL;
+    other.m_sw         = NULL;
+  }
+  return *this;
 }
 
 StackWalker::~StackWalker()

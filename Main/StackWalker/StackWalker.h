@@ -110,6 +110,12 @@ public:
 
   StackWalker(DWORD dwProcessId, HANDLE hProcess);
 
+  StackWalker(const StackWalker&) = delete;
+  StackWalker(StackWalker&& other);
+
+  StackWalker& operator=(const StackWalker&) = delete;
+  StackWalker& operator=(StackWalker&& other);
+
   virtual ~StackWalker();
 
   bool SetSymPath(LPCSTR szSymPath);
