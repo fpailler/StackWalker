@@ -361,6 +361,10 @@ public:
       m_hDbhHelp = LoadLibrary(_T("dbghelp.dll"));
     if (m_hDbhHelp == NULL)
       return FALSE;
+#if _MSC_VER >= 1900
+#pragma warning(push)
+#pragma warning(disable : 4191)
+#endif
     pSI = (tSI)GetProcAddress(m_hDbhHelp, "SymInitialize");
     pSC = (tSC)GetProcAddress(m_hDbhHelp, "SymCleanup");
 
@@ -376,17 +380,26 @@ public:
     pUDSN = (tUDSN)GetProcAddress(m_hDbhHelp, "UnDecorateSymbolName");
     pSLM = (tSLM)GetProcAddress(m_hDbhHelp, "SymLoadModule64");
     pSGSP = (tSGSP)GetProcAddress(m_hDbhHelp, "SymGetSearchPath");
-
+#if _MSC_VER >= 1900
+#pragma warning(pop)
+#endif
     pSAIIT = NULL;
     pSQIT = NULL;
     pSFIC = NULL;
     pSGLFIC = NULL;
     if ((this->m_parent->m_options & StackWalker::SymGetInlineFrames) != 0)
     {
+#if _MSC_VER >= 1900
+#pragma warning(push)
+#pragma warning(disable : 4191)
+#endif
       pSAIIT = (tSAIIT)GetProcAddress(m_hDbhHelp, "SymAddrIncludeInlineTrace");
       pSQIT = (tSQIT)GetProcAddress(m_hDbhHelp, "SymQueryInlineTrace");
       pSFIC = (tSFIC)GetProcAddress(m_hDbhHelp, "SymFromInlineContext");
       pSGLFIC = (tSGLFIC)GetProcAddress(m_hDbhHelp, "SymGetLineFromInlineContext");
+#if _MSC_VER >= 1900
+#pragma warning(pop)
+#endif
       if (pSAIIT == NULL || pSQIT == NULL || pSFIC == NULL || pSGLFIC == NULL)
       {
         pSAIIT = NULL;
@@ -640,9 +653,16 @@ private:
       hToolhelp = LoadLibrary(dllname[i]);
       if (hToolhelp == NULL)
         continue;
+#if _MSC_VER >= 1900
+#pragma warning(push)
+#pragma warning(disable : 4191)
+#endif
       pCT32S = (tCT32S)GetProcAddress(hToolhelp, "CreateToolhelp32Snapshot");
       pM32F = (tM32F)GetProcAddress(hToolhelp, "Module32First");
       pM32N = (tM32N)GetProcAddress(hToolhelp, "Module32Next");
+#if _MSC_VER >= 1900
+#pragma warning(pop)
+#endif
       if ((pCT32S != NULL) && (pM32F != NULL) && (pM32N != NULL))
         break; // found the functions!
       FreeLibrary(hToolhelp);
@@ -717,10 +737,17 @@ private:
     if (hPsapi == NULL)
       return FALSE;
 
+#if _MSC_VER >= 1900
+#pragma warning(push)
+#pragma warning(disable : 4191)
+#endif
     pEPM = (tEPM)GetProcAddress(hPsapi, "EnumProcessModules");
     pGMFNE = (tGMFNE)GetProcAddress(hPsapi, "GetModuleFileNameExA");
     pGMBN = (tGMFNE)GetProcAddress(hPsapi, "GetModuleBaseNameA");
     pGMI = (tGMI)GetProcAddress(hPsapi, "GetModuleInformation");
+#if _MSC_VER >= 1900
+#pragma warning(pop)
+#endif
     if ((pEPM == NULL) || (pGMFNE == NULL) || (pGMBN == NULL) || (pGMI == NULL))
     {
       // we couldn't find all functions
