@@ -246,7 +246,7 @@ static void MyStrCpy(char* szDest, size_t nMaxDestSize, const char* szSrc)
   strncpy_s(szDest, nMaxDestSize, szSrc, _TRUNCATE);
   // INFO: _TRUNCATE will ensure that it is null-terminated;
   // but with older compilers (<1400) it uses "strncpy" and this does not!)
-  szDest[nMaxDestSize - 1] = 0;
+  szDest[nMaxDestSize - 1] = '\0';
 } // MyStrCpy
 
 // Normally it should be enough to use 'CONTEXT_FULL' (better would be 'CONTEXT_ALL')
@@ -440,14 +440,14 @@ public:
     // SymSetOptions
     symOptions = this->pSSO(symOptions);
 
-    char buf[StackWalker::STACKWALK_MAX_NAMELEN] = {0};
+    char buf[StackWalker::STACKWALK_MAX_NAMELEN] = {'\0'};
     // SymGetSearchPath()
     if (this->pSGSP != NULL)
     {
       if (this->pSGSP(m_hProcess, buf, StackWalker::STACKWALK_MAX_NAMELEN) == FALSE)
         this->m_parent->OnDbgHelpErr("SymGetSearchPath", GetLastError(), 0);
     }
-    char  szUserName[1024] = {0};
+    char  szUserName[1024] = {'\0'};
     DWORD dwSize = 1024;
     GetUserNameA(szUserName, &dwSize);
     this->m_parent->OnSymInit(buf, symOptions, szUserName);
@@ -788,10 +788,10 @@ private:
       // base address, size
       pGMI(hProcess, hMods[i], &mi, sizeof(mi));
       // image file name
-      tt[0] = 0;
+      tt[0] = '\0';
       pGMFNE(hProcess, hMods[i], tt, TTBUFLEN);
       // module name
-      tt2[0] = 0;
+      tt2[0] = '\0';
       pGMBN(hProcess, hMods[i], tt2, TTBUFLEN);
 
       DWORD dwRes = this->LoadModule(hProcess, tt, tt2, (DWORD64)mi.lpBaseOfDll, mi.SizeOfImage);
@@ -891,7 +891,7 @@ private:
         }
       }
       LPCSTR pdbName = Module.LoadedImageName;
-      if (Module.LoadedPdbName[0] != 0)
+      if (Module.LoadedPdbName[0] != '\0')
         pdbName = Module.LoadedPdbName;
       this->m_parent->OnLoadModule(img, mod, baseAddr, size, result, szSymType, pdbName,
                                    fileVersion);
@@ -1111,7 +1111,7 @@ BOOL StackWalker::LoadModules()
       SetLastError(ERROR_NOT_ENOUGH_MEMORY);
       return FALSE;
     }
-    szSymPath[0] = 0;
+    szSymPath[0] = '\0';
     // Now first add the (optional) provided sympath:
     if (this->m_szSymPath != NULL)
     {
@@ -1126,7 +1126,7 @@ BOOL StackWalker::LoadModules()
     // Now add the current directory:
     if (GetCurrentDirectoryA(nTempLen, szTemp) > 0)
     {
-      szTemp[nTempLen - 1] = 0;
+      szTemp[nTempLen - 1] = '\0';
       strcat_s(szSymPath, nSymPathLen, szTemp);
       strcat_s(szSymPath, nSymPathLen, ";");
     }
@@ -1134,13 +1134,13 @@ BOOL StackWalker::LoadModules()
     // Now add the path for the main-module:
     if (GetModuleFileNameA(NULL, szTemp, nTempLen) > 0)
     {
-      szTemp[nTempLen - 1] = 0;
+      szTemp[nTempLen - 1] = '\0';
       for (char* p = (szTemp + strlen(szTemp) - 1); p >= szTemp; --p)
       {
         // locate the rightmost path separator
         if ((*p == '\\') || (*p == '/') || (*p == ':'))
         {
-          *p = 0;
+          *p = '\0';
           break;
         }
       } // for (search for path separator...)
@@ -1152,19 +1152,19 @@ BOOL StackWalker::LoadModules()
     }
     if (GetEnvironmentVariableA("_NT_SYMBOL_PATH", szTemp, nTempLen) > 0)
     {
-      szTemp[nTempLen - 1] = 0;
+      szTemp[nTempLen - 1] = '\0';
       strcat_s(szSymPath, nSymPathLen, szTemp);
       strcat_s(szSymPath, nSymPathLen, ";");
     }
     if (GetEnvironmentVariableA("_NT_ALTERNATE_SYMBOL_PATH", szTemp, nTempLen) > 0)
     {
-      szTemp[nTempLen - 1] = 0;
+      szTemp[nTempLen - 1] = '\0';
       strcat_s(szSymPath, nSymPathLen, szTemp);
       strcat_s(szSymPath, nSymPathLen, ";");
     }
     if (GetEnvironmentVariableA("SYSTEMROOT", szTemp, nTempLen) > 0)
     {
-      szTemp[nTempLen - 1] = 0;
+      szTemp[nTempLen - 1] = '\0';
       strcat_s(szSymPath, nSymPathLen, szTemp);
       strcat_s(szSymPath, nSymPathLen, ";");
       // also add the "system32"-directory:
@@ -1177,7 +1177,7 @@ BOOL StackWalker::LoadModules()
     {
       if (GetEnvironmentVariableA("SYSTEMDRIVE", szTemp, nTempLen) > 0)
       {
-        szTemp[nTempLen - 1] = 0;
+        szTemp[nTempLen - 1] = '\0';
         strcat_s(szSymPath, nSymPathLen, "SRV*");
         strcat_s(szSymPath, nSymPathLen, szTemp);
         strcat_s(szSymPath, nSymPathLen, "\\websymbols");
@@ -1584,20 +1584,20 @@ BOOL StackWalker::ShowObject(LPVOID pObject)
 
 void StackWalker::ClearCSEntryInline(CallstackEntry& csEntry)
 {
-    csEntry.name[0] = 0;
-    csEntry.undName[0] = 0;
-    csEntry.undFullName[0] = 0;
+    csEntry.name[0] = '\0';
+    csEntry.undName[0] = '\0';
+    csEntry.undFullName[0] = '\0';
     csEntry.offsetFromSymbol = 0;
     csEntry.offsetFromLine = 0;
-    csEntry.lineFileName[0] = 0;
+    csEntry.lineFileName[0] = '\0';
     csEntry.lineNumber = 0;
 }
 
 void StackWalker::ClearCSEntry(CallstackEntry& csEntry)
 {
     ClearCSEntryInline(csEntry);
-    csEntry.loadedImageName[0] = 0;
-    csEntry.moduleName[0] = 0;
+    csEntry.loadedImageName[0] = '\0';
+    csEntry.moduleName[0] = '\0';
     csEntry.baseOfImage = 0;
 }
 
@@ -1650,7 +1650,7 @@ void StackWalker::OnLoadModule(LPCSTR    img,
         "%s:%s (%p), size: %d (result: %d), SymType: '%s', PDB: '%s', fileVersion: %d.%d.%d.%d\n",
         img, mod, (LPVOID)baseAddr, size, result, symType, pdbName, v1, v2, v3, v4);
   }
-  buffer[STACKWALK_MAX_NAMELEN - 1] = 0; // be sure it is NULL terminated
+  buffer[STACKWALK_MAX_NAMELEN - 1] = '\0'; // be sure it is NULL terminated
   OnOutput(buffer);
 }
 
@@ -1663,16 +1663,16 @@ void StackWalker::OnCallstackEntry(CallstackEntryType eType, CallstackEntry& ent
 #endif
   if ((eType != lastEntry) && (entry.offset != 0))
   {
-    if (entry.name[0] == 0)
+    if (entry.name[0] == '\0')
       MyStrCpy(entry.name, STACKWALK_MAX_NAMELEN, "(function-name not available)");
-    if (entry.undName[0] != 0)
+    if (entry.undName[0] != '\0')
       MyStrCpy(entry.name, STACKWALK_MAX_NAMELEN, entry.undName);
-    if (entry.undFullName[0] != 0)
+    if (entry.undFullName[0] != '\0')
       MyStrCpy(entry.name, STACKWALK_MAX_NAMELEN, entry.undFullName);
-    if (entry.lineFileName[0] == 0)
+    if (entry.lineFileName[0] == '\0')
     {
       MyStrCpy(entry.lineFileName, STACKWALK_MAX_NAMELEN, "(filename not available)");
-      if (entry.moduleName[0] == 0)
+      if (entry.moduleName[0] == '\0')
         MyStrCpy(entry.moduleName, STACKWALK_MAX_NAMELEN, "(module-name not available)");
       _snprintf_s(buffer, maxLen, "%p (%s): %s: %s\n", (LPVOID)entry.offset, entry.moduleName,
                   entry.lineFileName, entry.name);
@@ -1680,7 +1680,7 @@ void StackWalker::OnCallstackEntry(CallstackEntryType eType, CallstackEntry& ent
     else
       _snprintf_s(buffer, maxLen, "%s (%d): %s\n", entry.lineFileName, entry.lineNumber,
                   entry.name);
-    buffer[STACKWALK_MAX_NAMELEN - 1] = 0;
+    buffer[STACKWALK_MAX_NAMELEN - 1] = '\0';
     OnOutput(buffer);
   }
 }
@@ -1694,7 +1694,7 @@ void StackWalker::OnDbgHelpErr(LPCSTR szFuncName, DWORD gle, DWORD64 addr)
 #endif
   _snprintf_s(buffer, maxLen, "ERROR: %s, GetLastError: %d (Address: %p)\n", szFuncName, gle,
               (LPVOID)addr);
-  buffer[STACKWALK_MAX_NAMELEN - 1] = 0;
+  buffer[STACKWALK_MAX_NAMELEN - 1] = '\0';
   OnOutput(buffer);
 }
 
@@ -1707,7 +1707,7 @@ void StackWalker::OnSymInit(LPCSTR szSearchPath, DWORD symOptions, LPCSTR szUser
 #endif
   _snprintf_s(buffer, maxLen, "SymInit: Symbol-SearchPath: '%s', symOptions: %d, UserName: '%s'\n",
               szSearchPath, symOptions, szUserName);
-  buffer[STACKWALK_MAX_NAMELEN - 1] = 0;
+  buffer[STACKWALK_MAX_NAMELEN - 1] = '\0';
   OnOutput(buffer);
   // Also display the OS-version
 #if _MSC_VER <= 1200
@@ -1718,7 +1718,7 @@ void StackWalker::OnSymInit(LPCSTR szSearchPath, DWORD symOptions, LPCSTR szUser
   {
     _snprintf_s(buffer, maxLen, "OS-Version: %d.%d.%d (%s)\n", ver.dwMajorVersion,
                 ver.dwMinorVersion, ver.dwBuildNumber, ver.szCSDVersion);
-    buffer[STACKWALK_MAX_NAMELEN - 1] = 0;
+    buffer[STACKWALK_MAX_NAMELEN - 1] = '\0';
     OnOutput(buffer);
   }
 #else
@@ -1734,7 +1734,7 @@ void StackWalker::OnSymInit(LPCSTR szSearchPath, DWORD symOptions, LPCSTR szUser
     _snprintf_s(buffer, maxLen, "OS-Version: %d.%d.%d (%s) 0x%x-0x%x\n", ver.dwMajorVersion,
                 ver.dwMinorVersion, ver.dwBuildNumber, ver.szCSDVersion, ver.wSuiteMask,
                 ver.wProductType);
-    buffer[STACKWALK_MAX_NAMELEN - 1] = 0;
+    buffer[STACKWALK_MAX_NAMELEN - 1] = '\0';
     OnOutput(buffer);
   }
 #if _MSC_VER >= 1900

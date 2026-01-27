@@ -198,7 +198,7 @@ LONG WINAPI ExpFilter(EXCEPTION_POINTERS* pExp, DWORD dwExpCode)
 void ExpTest5()
 {
   char* p = NULL;
-  p[0] = 0;
+  p[0] = '\0';
   printf(p);
 }
 void ExpTest4()
