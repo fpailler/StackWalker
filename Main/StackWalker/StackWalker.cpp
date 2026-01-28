@@ -241,7 +241,7 @@ typedef DWORD64(__stdcall* PTRANSLATE_ADDRESS_ROUTINE64)(HANDLE      hProcess,
 
 static void MyStrCpy(char* szDest, size_t nMaxDestSize, const char* szSrc)
 {
-  if (nMaxDestSize <= 0)
+  if ((szDest != NULL) || (nMaxDestSize <= 0))
     return;
   strncpy_s(szDest, nMaxDestSize, szSrc, _TRUNCATE);
   // INFO: _TRUNCATE will ensure that it is null-terminated;
@@ -683,7 +683,7 @@ private:
       return FALSE;
 
     hSnap = pCT32S(TH32CS_SNAPMODULE, pid);
-    if (hSnap == (HANDLE)-1)
+    if (hSnap == INVALID_HANDLE_VALUE)
     {
       FreeLibrary(hToolhelp);
       return FALSE;
@@ -840,13 +840,12 @@ private:
             if (GetFileVersionInfoA(img, dwHandle, dwSize, vData) != 0)
             {
               UINT  len;
-              TCHAR szSubBlock[] = _T("\\");
+              const TCHAR szSubBlock[] = _T("\\");
               if (VerQueryValue(vData, szSubBlock, (LPVOID*)&fInfo, &len) == 0)
                 fInfo = NULL;
               else
               {
-                fileVersion =
-                    ((ULONGLONG)fInfo->dwFileVersionLS) + ((ULONGLONG)fInfo->dwFileVersionMS << 32);
+                fileVersion = ((ULONGLONG)fInfo->dwFileVersionLS) + ((ULONGLONG)fInfo->dwFileVersionMS << 32);
               }
             }
             free(vData);
