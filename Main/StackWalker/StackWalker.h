@@ -101,14 +101,13 @@ public:
     OptionsAll = 0x7F
   } StackWalkOptions;
 
-  StackWalker(ExceptType extype, int options = OptionsAll, PEXCEPTION_POINTERS exp = NULL);
-
   StackWalker(int    options = OptionsAll, // 'int' is by design, to combine the enum-flags
               LPCSTR szSymPath = NULL,
               DWORD  dwProcessId = GetCurrentProcessId(),
               HANDLE hProcess = GetCurrentProcess());
 
   StackWalker(DWORD dwProcessId, HANDLE hProcess);
+  StackWalker(ExceptType extype, int options = OptionsAll, PEXCEPTION_POINTERS exp = NULL);
 
   StackWalker(const StackWalker&) = delete;
   StackWalker(StackWalker&& other);

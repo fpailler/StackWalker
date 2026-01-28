@@ -1011,14 +1011,14 @@ bool StackWalker::Init(ExceptType extype, int options, LPCSTR szSymPath, DWORD d
   return true;
 }
 
-StackWalker::StackWalker(DWORD dwProcessId, HANDLE hProcess)
-{
-  Init(NonExcept, OptionsAll, NULL, dwProcessId, hProcess);
-}
-
 StackWalker::StackWalker(int options, LPCSTR szSymPath, DWORD dwProcessId, HANDLE hProcess)
 {
   Init(NonExcept, options, szSymPath, dwProcessId, hProcess);
+}
+
+StackWalker::StackWalker(DWORD dwProcessId, HANDLE hProcess)
+{
+  Init(NonExcept, OptionsAll, NULL, dwProcessId, hProcess);
 }
 
 StackWalker::StackWalker(ExceptType extype, int options, PEXCEPTION_POINTERS exp)
