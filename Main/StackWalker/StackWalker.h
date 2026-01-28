@@ -57,14 +57,26 @@ class StackWalkerInternal; // forward
 class StackWalker
 {
 public:
+#if _MSC_VER >= 1900
+  enum class ExceptType
+#else
   typedef enum ExceptType
+#endif
   {
-    NonExcept   = 0,     // RtlCaptureContext
+    NonExcept = 0,     // RtlCaptureContext
     AfterExcept = 1,
-    AfterCatch  = 2,     // get_current_exception_context
+    AfterCatch = 2,     // get_current_exception_context
+#if _MSC_VER >= 1900
+  };
+#else
   } ExceptType;
+#endif
 
+#if _MSC_VER >= 1900
+  enum StackWalkOptions : int
+#else
   typedef enum StackWalkOptions
+#endif
   {
     // No addition info will be retrieved
     // (only the address is available)
@@ -99,15 +111,19 @@ public:
 
     // Contains all options (default)
     OptionsAll = 0x7F
+#if _MSC_VER >= 1900
+  };
+#else
   } StackWalkOptions;
+#endif
 
-  StackWalker(int    options = OptionsAll, // 'int' is by design, to combine the enum-flags
-              LPCSTR szSymPath = NULL,
-              DWORD  dwProcessId = GetCurrentProcessId(),
-              HANDLE hProcess = GetCurrentProcess());
+  StackWalker(int options = StackWalkOptions::OptionsAll, // 'int' is by design, to combine the enum-flags
+    LPCSTR szSymPath = NULL,
+    DWORD  dwProcessId = GetCurrentProcessId(),
+    HANDLE hProcess = GetCurrentProcess());
 
   StackWalker(DWORD dwProcessId, HANDLE hProcess);
-  StackWalker(ExceptType extype, int options = OptionsAll, PEXCEPTION_POINTERS exp = NULL);
+  StackWalker(ExceptType extype, int options = StackWalkOptions::OptionsAll, PEXCEPTION_POINTERS exp = NULL);
 
   StackWalker(const StackWalker&) = delete;
   StackWalker(StackWalker&& other);
@@ -125,25 +141,25 @@ public:
 
 private:
   bool Init(ExceptType extype, int options, LPCSTR szSymPath, DWORD dwProcessId,
-            HANDLE hProcess, PEXCEPTION_POINTERS exp = NULL);
+    HANDLE hProcess, PEXCEPTION_POINTERS exp = NULL);
 
 public:
   typedef BOOL(__stdcall* PReadProcessMemoryRoutine)(
-      HANDLE  hProcess,
-      DWORD64 qwBaseAddress,
-      PVOID   lpBuffer,
-      DWORD   nSize,
-      LPDWORD lpNumberOfBytesRead,
-      LPVOID  pUserData // optional data, which was passed in "ShowCallstack"
-  );
+    HANDLE  hProcess,
+    DWORD64 qwBaseAddress,
+    PVOID   lpBuffer,
+    DWORD   nSize,
+    LPDWORD lpNumberOfBytesRead,
+    LPVOID  pUserData // optional data, which was passed in "ShowCallstack"
+    );
 
   BOOL LoadModules();
 
   BOOL ShowCallstack(
-      HANDLE                    hThread = GetCurrentThread(),
-      const CONTEXT*            context = NULL,
-      PReadProcessMemoryRoutine readMemoryFunction = NULL,
-      LPVOID pUserData = NULL // optional to identify some data in the 'readMemoryFunction'-callback
+    HANDLE                    hThread = GetCurrentThread(),
+    const CONTEXT*            context = NULL,
+    PReadProcessMemoryRoutine readMemoryFunction = NULL,
+    LPVOID pUserData = NULL // optional to identify some data in the 'readMemoryFunction'-callback
   );
 
   BOOL ShowObject(LPVOID pObject);
@@ -160,7 +176,11 @@ protected:
 
 protected:
   // Entry for each Callstack-Entry
+#if _MSC_VER >= 1900
+  struct CallstackEntry
+#else
   typedef struct CallstackEntry
+#endif
   {
     DWORD64 offset; // if 0, we have no valid entry
     CHAR    name[STACKWALK_MAX_NAMELEN];
@@ -175,17 +195,29 @@ protected:
     CHAR    moduleName[STACKWALK_MAX_NAMELEN];
     DWORD64 baseOfImage;
     CHAR    loadedImageName[STACKWALK_MAX_NAMELEN];
+
+    void Clear();
+    void ClearInline();
+#if _MSC_VER >= 1900
+  };
+#else
   } CallstackEntry;
+#endif
 
-  void ClearCSEntry(CallstackEntry& csEntry);
-  void ClearCSEntryInline(CallstackEntry& csEntry);
-
+#if _MSC_VER >= 1900
+  enum class CallstackEntryType
+#else
   typedef enum CallstackEntryType
+#endif
   {
     firstEntry,
     nextEntry,
     lastEntry
+#if _MSC_VER >= 1900
+  };
+#else
   } CallstackEntryType;
+#endif
 
   virtual void OnSymInit(LPCSTR szSearchPath, DWORD symOptions, LPCSTR szUserName);
   virtual void OnLoadModule(LPCSTR    img,

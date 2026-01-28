@@ -397,7 +397,7 @@ public:
     pSQIT = NULL;
     pSFIC = NULL;
     pSGLFIC = NULL;
-    if ((this->m_parent->m_options & StackWalker::SymGetInlineFrames) != 0)
+    if ((this->m_parent->m_options & StackWalker::StackWalkOptions::SymGetInlineFrames) != 0)
     {
 #if _MSC_VER >= 1900
 #pragma warning(push)
@@ -827,7 +827,7 @@ private:
     if ((m_parent != NULL) && (img != NULL))
     {
       // try to retrieve the file-version:
-      if ((this->m_parent->m_options & StackWalker::RetrieveFileVersion) != 0)
+      if ((this->m_parent->m_options & StackWalker::StackWalkOptions::RetrieveFileVersion) != 0)
       {
         VS_FIXEDFILEINFO* fInfo = NULL;
         DWORD             dwHandle;
@@ -983,9 +983,9 @@ bool StackWalker::Init(ExceptType extype, int options, LPCSTR szSymPath, DWORD d
                        HANDLE hProcess, PEXCEPTION_POINTERS exp)
 {
   PCONTEXT ctx = NULL;
-  if (extype == AfterCatch)
+  if (extype == ExceptType::AfterCatch)
     ctx = get_current_exception_context();
-  if (extype == AfterExcept && exp)
+  if (extype == ExceptType::AfterExcept && exp)
     ctx = exp->ContextRecord;
   this->m_options = options;
   this->m_modulesLoaded = FALSE;
@@ -1013,12 +1013,12 @@ bool StackWalker::Init(ExceptType extype, int options, LPCSTR szSymPath, DWORD d
 
 StackWalker::StackWalker(int options, LPCSTR szSymPath, DWORD dwProcessId, HANDLE hProcess)
 {
-  Init(NonExcept, options, szSymPath, dwProcessId, hProcess);
+  Init(ExceptType::NonExcept, options, szSymPath, dwProcessId, hProcess);
 }
 
 StackWalker::StackWalker(DWORD dwProcessId, HANDLE hProcess)
 {
-  Init(NonExcept, OptionsAll, NULL, dwProcessId, hProcess);
+  Init(ExceptType::NonExcept, StackWalkOptions::OptionsAll, NULL, dwProcessId, hProcess);
 }
 
 StackWalker::StackWalker(ExceptType extype, int options, PEXCEPTION_POINTERS exp)
@@ -1092,7 +1092,7 @@ bool StackWalker::SetSymPath(LPCSTR szSymPath)
     return true;
   m_szSymPath = _strdup(szSymPath);
   if (m_szSymPath)
-    m_options |= SymBuildPath;
+    m_options |= StackWalkOptions::SymBuildPath;
   return true;
 }
 
@@ -1122,7 +1122,7 @@ BOOL StackWalker::LoadModules()
 
   // Build the sym-path:
   char* szSymPath = NULL;
-  if ((this->m_options & SymBuildPath) != 0)
+  if ((this->m_options & StackWalkOptions::SymBuildPath) != 0)
   {
     const size_t nSymPathLen = 4096;
     szSymPath = (char*)malloc(nSymPathLen);
@@ -1193,7 +1193,7 @@ BOOL StackWalker::LoadModules()
       strcat_s(szSymPath, nSymPathLen, ";");
     }
 
-    if ((this->m_options & SymUseSymSrv) != 0)
+    if ((this->m_options & StackWalkOptions::SymUseSymSrv) != 0)
     {
       if (GetEnvironmentVariableA("SYSTEMDRIVE", szTemp, nTempLen) > 0)
       {
@@ -1248,7 +1248,7 @@ BOOL StackWalker::ShowCallstack(HANDLE                    hThread,
   int                                       frameNum;
   bool                                      bLastEntryCalled = true;
   int                                       curRecursionCount = 0;
-  CallstackEntryType                        entryType = firstEntry;
+  CallstackEntryType                        entryType = CallstackEntryType::firstEntry;
 
   if (m_modulesLoaded == FALSE)
     this->LoadModules(); // ignore the result...
@@ -1380,7 +1380,7 @@ BOOL StackWalker::ShowCallstack(HANDLE                    hThread,
     }
 
     csEntry.offset = s.AddrPC.Offset;
-    ClearCSEntry(csEntry);
+    csEntry.Clear();
 
     // make sure the location of the calling function is reported, and not of the next statement
     if (frameNum != 0 && csEntry.offset != 0)
@@ -1492,9 +1492,9 @@ BOOL StackWalker::ShowCallstack(HANDLE                    hThread,
 
               bLastEntryCalled = false;
               this->OnCallstackEntry(entryType, csEntry);
-              entryType = nextEntry;
+              entryType = CallstackEntryType::nextEntry;
 
-              ClearCSEntryInline(csEntry);
+              csEntry.ClearInline();
               inlineContext++;
             }
           }
@@ -1537,12 +1537,12 @@ BOOL StackWalker::ShowCallstack(HANDLE                    hThread,
 
     bLastEntryCalled = false;
     this->OnCallstackEntry(entryType, csEntry);
-    entryType = nextEntry;
+    entryType = CallstackEntryType::nextEntry;
 
     if (s.AddrReturn.Offset == 0)
     {
       bLastEntryCalled = true;
-      this->OnCallstackEntry(lastEntry, csEntry);
+      this->OnCallstackEntry(CallstackEntryType::lastEntry, csEntry);
       SetLastError(ERROR_SUCCESS);
       break;
     }
@@ -1555,7 +1555,7 @@ cleanup:
     free(pSymInfo);
 
   if (bLastEntryCalled == false)
-    this->OnCallstackEntry(lastEntry, csEntry);
+    this->OnCallstackEntry(CallstackEntryType::lastEntry, csEntry);
 
   if (context == NULL)
     ResumeThread(hThread);
@@ -1602,23 +1602,23 @@ BOOL StackWalker::ShowObject(LPVOID pObject)
   return TRUE;
 };
 
-void StackWalker::ClearCSEntryInline(CallstackEntry& csEntry)
+void StackWalker::CallstackEntry::Clear()
 {
-    csEntry.name[0] = '\0';
-    csEntry.undName[0] = '\0';
-    csEntry.undFullName[0] = '\0';
-    csEntry.offsetFromSymbol = 0;
-    csEntry.offsetFromLine = 0;
-    csEntry.lineFileName[0] = '\0';
-    csEntry.lineNumber = 0;
+  ClearInline();
+  loadedImageName[0] = '\0';
+  moduleName[0] = '\0';
+  baseOfImage = 0;
 }
 
-void StackWalker::ClearCSEntry(CallstackEntry& csEntry)
+void StackWalker::CallstackEntry::ClearInline()
 {
-    ClearCSEntryInline(csEntry);
-    csEntry.loadedImageName[0] = '\0';
-    csEntry.moduleName[0] = '\0';
-    csEntry.baseOfImage = 0;
+    name[0] = '\0';
+    undName[0] = '\0';
+    undFullName[0] = '\0';
+    offsetFromSymbol = 0;
+    offsetFromLine = 0;
+    lineFileName[0] = '\0';
+    lineNumber = 0;
 }
 
 BOOL __stdcall StackWalker::myReadProcMem(HANDLE  hProcess,
@@ -1681,7 +1681,7 @@ void StackWalker::OnCallstackEntry(CallstackEntryType eType, CallstackEntry& ent
 #if _MSC_VER >= 1400
   maxLen = _TRUNCATE;
 #endif
-  if ((eType != lastEntry) && (entry.offset != 0))
+  if ((eType != CallstackEntryType::lastEntry) && (entry.offset != 0))
   {
     if (entry.name[0] == '\0')
       MyStrCpy(entry.name, STACKWALK_MAX_NAMELEN, "(function-name not available)");
