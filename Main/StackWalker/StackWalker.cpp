@@ -992,15 +992,23 @@ bool StackWalker::Init(ExceptType extype, int options, LPCSTR szSymPath, DWORD d
   this->m_modulesLoaded = FALSE;
   this->m_szSymPath = NULL;
   this->m_MaxRecursionCount = 1000;
+#if _MSC_VER >= 1900
+  this->m_sw = nullptr;
+#else
   this->m_sw = NULL;
+#endif
   SetTargetProcess(dwProcessId, hProcess);
   SetSymPath(szSymPath);
+#if _MSC_VER >= 1900
+  this->m_sw = new(std::nothrow) StackWalkerInternal(this, this->m_hProcess, ctx);
+#else
   /* MSVC ignore std::nothrow specifier for `new` operator */
   LPVOID buf = malloc(sizeof(StackWalkerInternal));
   if (!buf)
     return false;
   memset(buf, 0, sizeof(StackWalkerInternal));
   this->m_sw = new(buf) StackWalkerInternal(this, this->m_hProcess, ctx);  // placement new
+#endif
   return true;
 }
 
@@ -1030,7 +1038,11 @@ StackWalker::StackWalker(StackWalker&& other)
   m_MaxRecursionCount = other.m_MaxRecursionCount;
 
   other.m_szSymPath  = NULL;
-  other.m_sw         = NULL;
+#if _MSC_VER >= 1900
+  other.m_sw = nullptr;
+#else
+  other.m_sw = NULL;
+#endif
 }
 
 StackWalker& StackWalker::operator=(StackWalker&& other)
@@ -1048,7 +1060,11 @@ StackWalker& StackWalker::operator=(StackWalker&& other)
     m_MaxRecursionCount = other.m_MaxRecursionCount;
 
     other.m_szSymPath  = NULL;
-    other.m_sw         = NULL;
+#if _MSC_VER >= 1900
+    other.m_sw = nullptr;
+#else
+    other.m_sw = NULL;
+#endif
   }
   return *this;
 }
@@ -1056,11 +1072,16 @@ StackWalker& StackWalker::operator=(StackWalker&& other)
 StackWalker::~StackWalker()
 {
   SetSymPath(NULL);
-  if (m_sw != NULL) {
+#if _MSC_VER >= 1900
+  delete m_sw;
+#else
+  if (m_sw != NULL)
+  {
     m_sw->~StackWalkerInternal();  // call the object's destructor
     free(m_sw);
   }
   m_sw = NULL;
+#endif
 }
 
 bool StackWalker::SetSymPath(LPCSTR szSymPath)
