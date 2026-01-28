@@ -13,6 +13,5 @@ BinPackParameters: false
 AlignEscapedNewlines: Right
 PointerAlignment: Left
 AlignConsecutiveDeclarations: true
-AlignEscapedNewlines: true
 IndentCaseLabels: true
 ...
