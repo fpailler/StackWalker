@@ -908,7 +908,7 @@ public:
     return GetModuleListPSAPI(hProcess);
   }
 
-  BOOL GetModuleInfo(HANDLE hProcess, DWORD64 baseAddr, IMAGEHLP_MODULE64_V3* pModuleInfo)
+  BOOL GetModuleInfo(HANDLE hProcess, DWORD64 baseAddr, IMAGEHLP_MODULE64_V3* pModuleInfo) const
   {
     memset(pModuleInfo, 0, sizeof(IMAGEHLP_MODULE64_V3));
     if (this->pSGMI == NULL)
