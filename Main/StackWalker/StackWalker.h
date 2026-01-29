@@ -125,11 +125,13 @@ public:
   StackWalker(DWORD dwProcessId, HANDLE hProcess);
   StackWalker(ExceptType extype, int options = StackWalkOptions::OptionsAll, PEXCEPTION_POINTERS exp = NULL);
 
+#if _MSC_VER >= 1900
   StackWalker(const StackWalker&) = delete;
-  StackWalker(StackWalker&& other);
+  StackWalker(StackWalker&& other) noexcept;
 
   StackWalker& operator=(const StackWalker&) = delete;
-  StackWalker& operator=(StackWalker&& other);
+  StackWalker& operator=(StackWalker&& other) noexcept;
+#endif
 
   virtual ~StackWalker();
 

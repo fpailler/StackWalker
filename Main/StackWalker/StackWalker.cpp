@@ -282,11 +282,13 @@ public:
       m_ctx = *ctx;
   }
 
+#if _MSC_VER >= 1900
   StackWalkerInternal() = delete;
   StackWalkerInternal(const StackWalkerInternal&) = delete;
   StackWalkerInternal& operator=(const StackWalkerInternal&) = delete;
   StackWalkerInternal(StackWalkerInternal&&) = delete;
   StackWalkerInternal& operator=(StackWalkerInternal&&) = delete;
+#endif
 
   ~StackWalkerInternal()
   {
@@ -295,13 +297,22 @@ public:
     if (m_hDbhHelp != NULL)
       FreeLibrary(m_hDbhHelp);
     m_hDbhHelp = NULL;
+#if _MSC_VER >= 1900
+    m_parent = nullptr;
+#else
     m_parent = NULL;
+#endif
   }
 
   BOOL Init(LPCSTR szSymPath)
   {
-    if (m_parent == NULL)
+#if _MSC_VER >= 1900
+    if (this->m_parent == nullptr)
       return FALSE;
+#else
+    if (this->m_parent == NULL)
+      return FALSE;
+#endif
     // Dynamically load the Entry-Points for dbghelp.dll:
     // First try to load the newest one from
     TCHAR szTemp[4096];
@@ -1026,7 +1037,8 @@ StackWalker::StackWalker(ExceptType extype, int options, PEXCEPTION_POINTERS exp
   Init(extype, options, NULL, GetCurrentProcessId(), GetCurrentProcess(), exp);
 }
 
-StackWalker::StackWalker(StackWalker&& other)
+#if _MSC_VER >= 1900
+StackWalker::StackWalker(StackWalker&& other) noexcept
 {
   m_sw               = other.m_sw;
   m_hProcess         = other.m_hProcess;
@@ -1037,14 +1049,10 @@ StackWalker::StackWalker(StackWalker&& other)
   m_MaxRecursionCount = other.m_MaxRecursionCount;
 
   other.m_szSymPath  = NULL;
-#if _MSC_VER >= 1900
   other.m_sw = nullptr;
-#else
-  other.m_sw = NULL;
-#endif
 }
 
-StackWalker& StackWalker::operator=(StackWalker&& other)
+StackWalker& StackWalker::operator=(StackWalker&& other) noexcept
 {
   if (this != &other)
   {
@@ -1059,14 +1067,11 @@ StackWalker& StackWalker::operator=(StackWalker&& other)
     m_MaxRecursionCount = other.m_MaxRecursionCount;
 
     other.m_szSymPath  = NULL;
-#if _MSC_VER >= 1900
     other.m_sw = nullptr;
-#else
-    other.m_sw = NULL;
-#endif
   }
   return *this;
 }
+#endif
 
 StackWalker::~StackWalker()
 {
